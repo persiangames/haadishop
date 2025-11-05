@@ -1,0 +1,74 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: haadishop-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: haadishop
+      MYSQL_USER: haadi
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+    ports:
+      - "3306:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--sql-mode=", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7
+    container_name: haadishop-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: haadishop-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: haadishop-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: haadishop-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+
+  minio:
+    image: minio/minio:latest
+    container_name: haadishop-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: adminadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+volumes:
+  mysql_data:
+  es_data:
+  minio_data:
+
+
